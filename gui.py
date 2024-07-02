@@ -5,6 +5,11 @@ from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath
 from pywinstyles import apply_style
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
 class CustomMessageBox(QMessageBox):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -265,7 +270,7 @@ class WhistScoreKeeper(QMainWindow):
         self.height = 700
         self.setFixedSize(self.width, self.height)
         self.setStyleSheet('background-color: #111111;')
-        self.setWindowIcon(QIcon('resources/FullLogo.ico'))
+        self.setWindowIcon(QIcon(resource_path('resources/FullLogo.ico')))
 
         self.players = [("Player 1", 0, 0), ("Player 2", 0, 0), ("Player 3", 0, 0), ("Player 4", 0, 0)]
         self.dealer_index = 0
@@ -377,7 +382,7 @@ class WhistScoreKeeper(QMainWindow):
         self.load_existing_game_button.move(125, 520)
 
         self.logo_label = QLabel(self)
-        logo_pixmap = QPixmap('resources/FullLogo_Transparent.png')
+        logo_pixmap = QPixmap(resource_path('resources/FullLogo_Transparent.png'))
         logo_width = 400
         logo_height = 370
         scaled_pixmap = logo_pixmap.scaled(logo_width, logo_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -540,7 +545,7 @@ class WhistScoreKeeper(QMainWindow):
 
         # Stars
         self.p1_star_label = QLabel(self)
-        star_pixmap = QPixmap('resources/star.png').scaled(20,20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        star_pixmap = QPixmap(resource_path('resources/star.png')).scaled(20,20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.p1_star_label.setPixmap(star_pixmap)
         self.p1_star_label.setFixedSize(20,20)
         self.p1_star_label.move(8,129)
@@ -555,7 +560,7 @@ class WhistScoreKeeper(QMainWindow):
 
         # Stars
         self.p2_star_label = QLabel(self)
-        star_pixmap = QPixmap('resources/star.png').scaled(20,20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        #star_pixmap = QPixmap('resources/star.png').scaled(20,20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.p2_star_label.setPixmap(star_pixmap)
         self.p2_star_label.setFixedSize(20,20)
         self.p2_star_label.move(8,215)
@@ -570,7 +575,7 @@ class WhistScoreKeeper(QMainWindow):
 
         # Stars
         self.p3_star_label = QLabel(self)
-        star_pixmap = QPixmap('resources/star.png').scaled(20,20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        #star_pixmap = QPixmap('resources/star.png').scaled(20,20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.p3_star_label.setPixmap(star_pixmap)
         self.p3_star_label.setFixedSize(20,20)
         self.p3_star_label.move(8,301)
@@ -585,7 +590,7 @@ class WhistScoreKeeper(QMainWindow):
 
         # Stars
         self.p4_star_label = QLabel(self)
-        star_pixmap = QPixmap('resources/star.png').scaled(20,20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        #star_pixmap = QPixmap('resources/star.png').scaled(20,20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.p4_star_label.setPixmap(star_pixmap)
         self.p4_star_label.setFixedSize(20,20)
         self.p4_star_label.move(8,387)
