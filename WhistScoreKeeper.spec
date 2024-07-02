@@ -5,7 +5,7 @@ a = Analysis(
     ['gui.py'],
     pathex=[],
     binaries=[],
-    datas=[('resources/FullLogo.ico', 'FullLogo.ico'), ('resources/FullLogo_Transparent.png', 'FullLogo_Transparent.png'), ('resources/star.png', 'star.png')],
+    datas=[('resources/', 'resources/')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
