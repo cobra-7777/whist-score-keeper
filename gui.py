@@ -2,10 +2,9 @@ import sys
 import os
 from PyQt5.QtWidgets import QDialog, QComboBox, QSizePolicy, QSpacerItem, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox, QLineEdit
 from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
-from PyQt5.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath, QFontMetrics
 from pywinstyles import apply_style
 from gui_utils.hand_dialog import HandDialog
-from gui_utils.custom_messagebox import CustomMessageBox
 from gui_utils.player_frame import PlayerFrame
 from game_logic import WhistGameFourPlayers
 game = WhistGameFourPlayers()
@@ -47,20 +46,6 @@ class WhistScoreKeeper(QMainWindow):
         # Set up the initial layout
         self.load_main_menu()
 
-    def paintEvent(self, event):
-        super().paintEvent(event)
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-
-        # Define the pen to draw the line
-        pen = QPen(QColor('red'), 2, Qt.SolidLine)
-        painter.setPen(pen)
-
-        # Calculate the center of the window
-        center_x = self.width // 2
-
-        # Draw the vertical line
-        painter.drawLine(center_x, 0, center_x, self.height)
 
 
     ##########################################################
@@ -196,7 +181,7 @@ class WhistScoreKeeper(QMainWindow):
         self.hands_played_label.setFont(self.hands_played_font)
         self.hands_played_label.setStyleSheet('color: white;')
         self.hands_played_label.setAlignment(Qt.AlignCenter)
-        self.hands_played_label.resize(225,95)
+        self.hands_played_label.resize(238,95)
         self.hands_played_label.move((self.width - 140) // 2, 20)
         self.hands_played_label.show()
 
@@ -260,9 +245,7 @@ class WhistScoreKeeper(QMainWindow):
         # Update the main UI and save the game state
         caller, call, partner, tricks_won = hand_info
 
-        print(f"SELF.PLAYERS BEFORE CALCULATING SCORE: {self.players}")
-
-        if game.is_special_game():
+        if game.is_special_game(call):
             player_points, opponent_points = game.calculate_special_game_score(call, tricks_won)
             game.distribute_special_game_points(caller, player_points, opponent_points)
         else:
@@ -280,13 +263,11 @@ class WhistScoreKeeper(QMainWindow):
             player_frame.points = points
             player_frame.stars = stars
             player_frame.role = None
-            if i == self.dealer_index:
+            if i == game.get_dealer_index():
                 player_frame.role = 'DEALER'
-            elif i == self.caller_index:
+            elif i == game.get_caller_index():
                 player_frame.role = 'CALLER'
             player_frame.update()
-
-        print(f"SELF.PLAYERS AFTER UPDATE_STANDINGS: {self.players}")
 
         if game.get_hands_played() >= 12:
             self.end_game()  
@@ -302,11 +283,8 @@ class WhistScoreKeeper(QMainWindow):
         winners = game.get_winner()
         winner_names = ', '.join([winner[0] for winner in winners])
 
-        #QMessageBox.information(self, "Game Over", f"The winner is: {winner_names}")
-        self.show_custom_message_box("Game Over", f"The winner is: {winner_names}")
-
         game.set_hands_played(0)
-        self.hands_played_label.setText(f'Hands Played: {game.get_hands_played}')
+        self.hands_played_label.setText(f'Hands Played: {game.get_hands_played()}')
         
         players = game.get_players()
         for i, (player, points, stars) in enumerate(players):
@@ -325,21 +303,16 @@ class WhistScoreKeeper(QMainWindow):
             player_frame.update()
 
         for player in game.get_players():
-            self.star_labels[player[0]].setText(f'- {player[2]}')
+            self.star_labels[player[0]].setText(f'{player[2]}')
         
         self.save_game()
+
+        self.show_winner_ui(winner_names)
 
 
     ##########################################################
     # UTIL FUNCTIONS                                         #
     ##########################################################
-
-    def show_custom_message_box(self, title, text):
-        msg_box = CustomMessageBox(self)
-        msg_box.set_message(title, text)
-        msg_box.setStandardButtons(QMessageBox.Ok)
-        msg_box.exec_()
-
 
     def clear_ui(self):
         for widget in self.findChildren(QWidget):
@@ -354,6 +327,10 @@ class WhistScoreKeeper(QMainWindow):
     def start_fresh_game(self):
         self.clear_ui()
         self.load_four_player_new_game_ui()
+
+    def show_winner_ui(self, winners):
+        self.clear_ui()
+        self.display_winner(winners)
 
     
     def load_existing_game(self):
@@ -463,10 +440,10 @@ class WhistScoreKeeper(QMainWindow):
             star_label.show()
 
             text_label = QLabel(f'{stars}', self)
-            text_label.move(410, y_positions[i] + 10)
-            text_label.resize(40, 20)
+            text_label.move(410, y_positions[i] + 8)
+            text_label.resize(50, 22)
             text_label.setStyleSheet('color: white;')
-            text_label.setFont(QFont('Impact', 18))
+            text_label.setFont(QFont('Impact', 20))
             text_label.show()
 
             self.star_labels[player_name] = text_label
@@ -498,6 +475,69 @@ class WhistScoreKeeper(QMainWindow):
         # Update star labels
         for player, points, stars in game.get_players():
             self.star_labels[player].setText(f'{stars}')
+
+    
+    def display_winner(self, winner):
+
+        # OKAY BUTTON
+        self.okay_button = QPushButton("OKAY", self)
+        self.okay_button.clicked.connect(self.reset_ui_for_new_game)
+        self.okay_button.setStyleSheet("""
+            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
+            QPushButton:hover { background-color: #E2B258; border: none; }
+            QPushButton:pressed { background-color: #DD9637; border: none; }
+        """)
+        self.okay_button.setFixedSize(400,80)
+        self.okay_button.setFont(self.new_game_button_font)
+        self.okay_button.move((self.width - 400) // 2 , 720)
+
+        # WINNER NAME
+        font = self.new_game_button_font
+        font_metrics = QFontMetrics(font)
+        text = f'THE WINNER(S) ARE: {winner}'
+        text_width = font_metrics.horizontalAdvance(text)
+
+        self.winner_name_label = QLabel(text, self)
+        self.winner_name_label.setFont(self.new_game_button_font)
+        self.winner_name_label.resize(text_width,100)
+        self.winner_name_label.setStyleSheet('color: white;')
+        self.winner_name_label.move((self.width - text_width) // 2, 600)
+
+        # LOGO LABEL
+        self.winner_label = QLabel(self)
+        logo_pixmap = QPixmap(resource_path('resources/winner_logo.png'))
+        logo_width = 750
+        logo_height = 550
+        scaled_pixmap = logo_pixmap.scaled(logo_width, logo_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.winner_label.setPixmap(scaled_pixmap)
+        self.winner_label.resize(logo_width, logo_height)
+        self.winner_label.move((self.width - 750) // 2, 10)
+
+        self.effect = QGraphicsOpacityEffect(self)
+        self.winner_label.setGraphicsEffect(self.effect)
+
+        self.animation = QPropertyAnimation(self.effect, b'opacity')
+        self.animation.setDuration(3000)
+        self.animation.setStartValue(0)
+        self.animation.setEndValue(1)
+        self.animation.start()
+
+        # SHOW
+        self.winner_label.show()
+        self.okay_button.show()
+        self.winner_name_label.show()
+
+    
+    def reset_ui_for_new_game(self):
+        # Hide the winner UI components
+        self.winner_label.hide()
+        self.okay_button.hide()
+        self.winner_name_label.hide()
+
+        self.init_main_ui()
+        self.update_ui_for_loaded_game
+
+
 
 
 def main():

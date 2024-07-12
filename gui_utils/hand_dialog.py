@@ -68,7 +68,7 @@ class HandDialog(QDialog):
 
     def init_ui(self):
         self.setWindowTitle("Complete A Hand")
-        self.setFixedSize(400, 500)
+        self.setFixedSize(700, 750)
         self.setStyleSheet('background-color: #111111; color: white;')
         apply_style(self, "dark")
 
@@ -77,7 +77,10 @@ class HandDialog(QDialog):
         def add_label_and_combo(label_text, combo_box):
             h_layout = QHBoxLayout()
             label = QLabel(label_text)
+            label.setFont(QFont('Impact', 26))
             label.setStyleSheet('color: white;')
+            combo_box.setFont(QFont('Impact', 20))
+            combo_box.setFixedSize(300,40)
             h_layout.addWidget(label)
             h_layout.addWidget(combo_box)
             layout.addLayout(h_layout)
@@ -119,7 +122,7 @@ class HandDialog(QDialog):
             QPushButton:hover { background-color: #E2B258; border: none; }
             QPushButton:pressed { background-color: #DD9637; border: none; }
         """)
-        complete_button.setFont(QFont('Palatino Linotype', 14))
+        complete_button.setFont(QFont('Impact', 27))
         button_layout = QHBoxLayout()
         button_layout.addStretch()
         button_layout.addWidget(complete_button)
