@@ -501,7 +501,7 @@ class WhistScoreKeeper(QMainWindow):
         self.winner_name_label.setFont(self.new_game_button_font)
         self.winner_name_label.resize(text_width,100)
         self.winner_name_label.setStyleSheet('color: white;')
-        self.winner_name_label.move((self.width - text_width) // 2, 600)
+        self.winner_name_label.move((self.width - text_width) // 2, 580)
 
         # LOGO LABEL
         self.winner_label = QLabel(self)
@@ -535,7 +535,7 @@ class WhistScoreKeeper(QMainWindow):
         self.winner_name_label.hide()
 
         self.init_main_ui()
-        self.update_ui_for_loaded_game
+        self.update_ui_for_loaded_game()
 
 
 
