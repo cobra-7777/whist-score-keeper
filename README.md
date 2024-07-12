@@ -26,10 +26,10 @@ Whist Score Keeper is a program created in Python, to help you keep track of the
 
     
 ## Screenshots
-Main Menu:
+
 ![App Screenshot](https://i.postimg.cc/W4b0WdLb/2024-07-12-05-13-51-Whist-Score-Keeper.png)
 
-Example of ongoing Game:
+
 ![App Screenshot](https://i.postimg.cc/tRPnz3ZN/2024-07-12-05-15-52-Whist-Score-Keeper.png)
 
 
