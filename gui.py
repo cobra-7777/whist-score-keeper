@@ -1,13 +1,19 @@
 import sys
 import os
+import random
+import glob
 from PyQt5.QtWidgets import QDialog, QComboBox, QSizePolicy, QSpacerItem, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox, QLineEdit
 from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath, QFontMetrics
 from pywinstyles import apply_style
 from gui_utils.hand_dialog import HandDialog
 from gui_utils.player_frame import PlayerFrame
+from gui_utils.custom_info_box import InfoMessageBox
+from gui_utils.game_history_dialog import GameHistoryDialog
 from game_logic import WhistGameFourPlayers
 game = WhistGameFourPlayers()
+
+# bug reprocude, start, play one game, close, load, play one more, and first name is duped.
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -231,6 +237,32 @@ class WhistScoreKeeper(QMainWindow):
         self.complete_hand_button.setFixedSize(400,80)
         self.complete_hand_button.move((self.width - 400) // 2 , 790)
         self.complete_hand_button.show()
+
+        # Shuffle players button
+        self.shuffle_players_button = QPushButton("Shuffle Player Order", self)
+        self.shuffle_players_button.clicked.connect(self.shuffle_players)
+        self.shuffle_players_button.setStyleSheet("""
+        QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
+        QPushButton:hover { background-color: #E2B258; border: none; }
+        QPushButton:pressed { background-color: #DD9637; border: none; }
+        """)
+        self.shuffle_players_button.setFont(self.new_game_button_font)
+        self.shuffle_players_button.setFixedSize(320,60)
+        self.shuffle_players_button.move((self.width // 6) - (320 // 2), 800)
+        self.shuffle_players_button.show()
+
+        # History Button
+        self.history_button = QPushButton('Game History', self)
+        self.history_button.clicked.connect(self.show_history_dialog)
+        self.history_button.setStyleSheet("""
+        QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
+        QPushButton:hover { background-color: #E2B258; border: none; }
+        QPushButton:pressed { background-color: #DD9637; border: none; }
+        """)
+        self.history_button.setFont(self.new_game_button_font)
+        self.history_button.setFixedSize(300,60)
+        self.history_button.move((5 * self.width // 6) - (320 // 2), 800)
+        self.history_button.show()
         
         self.star_labels = {}
 
@@ -254,6 +286,8 @@ class WhistScoreKeeper(QMainWindow):
         
         game.set_hands_played(game.get_hands_played() + 1)
         self.hands_played_label.setText(f'Hands Played: {game.get_hands_played()}')
+
+        game.update_points_history()
 
         game.set_dealer_index((game.get_dealer_index() + 1) % len(game.get_players()))
         game.set_caller_index((game.get_caller_index() + 1) % len(game.get_players()))
@@ -304,6 +338,8 @@ class WhistScoreKeeper(QMainWindow):
 
         for player in game.get_players():
             self.star_labels[player[0]].setText(f'{player[2]}')
+
+        game.clear_history()
         
         self.save_game()
 
@@ -343,7 +379,15 @@ class WhistScoreKeeper(QMainWindow):
     def save_game(self):
         # Generate the file name based on the participant names
         participant_names = '-'.join([player[0] for player in game.get_players()])
-        file_name = f"Game-{participant_names}.wst"
+        game_id = game.get_game_id()
+        history = game.get_history()
+        file_name = f"Game-{participant_names}-{game_id}.wst"
+        existing_files = glob.glob(f'*{game_id}.wst')
+
+        if existing_files:
+            existing_file = existing_files[0]
+            if existing_file != file_name:
+                os.rename(existing_file, file_name)
 
         # Save the game state to the file
         with open(file_name, 'w') as file:
@@ -352,6 +396,13 @@ class WhistScoreKeeper(QMainWindow):
             file.write(f"hands_played,{game.get_hands_played()}\n")
             file.write(f"dealer_index,{game.get_dealer_index()}\n")
             file.write(f"caller_index,{game.get_caller_index()}\n")
+            file.write(f'game_id,{game_id}\n')
+
+            # Save history
+            for i, game_points in enumerate(history, start=1):
+                if game_points:
+                    history_line = f'history_{i},' + ','.join([f'{player[0]}={points}' for player, points in zip(game.get_players(), game_points)])
+                    file.write(history_line + '\n')
     
 
     def load_game(self, file_name):
@@ -364,6 +415,8 @@ class WhistScoreKeeper(QMainWindow):
         hands_played = 0
         dealer_index = 0
         caller_index = 0
+        game_id = None
+        history = [[] for _ in range(12)]
 
         for line in lines:
             parts = line.strip().split(',')
@@ -373,6 +426,17 @@ class WhistScoreKeeper(QMainWindow):
                 dealer_index = int(parts[1])
             elif parts[0] == 'caller_index':
                 caller_index = int(parts[1])
+            elif parts[0] == 'game_id':
+                game_id = parts[1]
+            elif parts[0].startswith('history_'):
+                round_number = int(parts[0].split('_')[1])
+                game_points = []
+                for p in parts[1:]:
+                    if '=' in p:
+                        game_points.append(int(p.split('=')[1]))
+                    else:
+                        game_points.append('')  # Append empty string for missing values
+                history[round_number - 1] = game_points
             else:
                 player = parts[0]
                 points = int(parts[1])
@@ -384,6 +448,8 @@ class WhistScoreKeeper(QMainWindow):
         game.set_hands_played(hands_played)
         game.set_dealer_index(dealer_index)
         game.set_caller_index(caller_index)
+        game.set_game_id(game_id)
+        game.set_history(history)
 
         # Update the UI
         self.clear_ui()
@@ -413,6 +479,7 @@ class WhistScoreKeeper(QMainWindow):
             self.save_game()
             self.clear_ui()
             self.init_main_ui()
+        
         else:
             QMessageBox.warning(self, "Input Error", "Please enter all player names.")
 
@@ -420,6 +487,25 @@ class WhistScoreKeeper(QMainWindow):
     def complete_hand(self):
         self.hand_dialog = HandDialog(game.get_players(), self)
         self.hand_dialog.exec_()
+
+    
+    def shuffle_players(self):
+        if game.get_hands_played() > 0:
+            msg_box = InfoMessageBox('Not Allowed', 'You cannot shuffle players in the middle of a game.', self)
+            msg_box.exec_()
+            return
+        
+        players = game.get_players()
+        random.shuffle(players)
+        game.set_players(players)
+        self.update_ui_on_shuffle()
+        self.save_game()
+
+    
+    def show_history_dialog(self):
+        history = game.get_history()
+        dialog = GameHistoryDialog(history, game.get_players(), self)
+        dialog.exec_()
 
     
     ##########################################################
@@ -475,6 +561,49 @@ class WhistScoreKeeper(QMainWindow):
         # Update star labels
         for player, points, stars in game.get_players():
             self.star_labels[player].setText(f'{stars}')
+
+    def update_ui_on_shuffle(self):
+        player_label_positions = [
+        ((self.width - 500) // 2, 180),
+        ((self.width - 500) // 2, 330),
+        ((self.width - 500) // 2, 480),
+        ((self.width - 500) // 2, 630)
+        ]
+
+        self.hands_played_label.setText(f'Hands Played: {game.get_hands_played()}')
+
+        # Clear the existing player frames
+        for player_frame in self.player_frames.values():
+            player_frame.hide()
+            player_frame.setParent(None)
+
+        # Recreate the player frames in the new order
+        self.player_frames = {}
+        for i, (player, points, stars) in enumerate(game.get_players()):
+            role = None
+            if i == game.get_dealer_index():
+                role = 'DEALER'
+            elif i == game.get_caller_index():
+                role = 'CALLER'
+
+            player_frame = PlayerFrame(player, points, stars, role)
+            player_frame.setObjectName(player)
+            player_frame.setParent(self)  # Assuming this is the main container
+            player_frame.move(*player_label_positions[i])
+            player_frame.show()
+            self.player_frames[player] = player_frame
+
+
+        for star_label in self.star_labels.values():
+            star_label.hide()
+            star_label.setParent(None)
+        
+        self.star_labels.clear()
+
+        self.setup_star_labels()
+
+        # Ensure the complete hand button is visible
+        self.complete_hand_button.show()
 
     
     def display_winner(self, winner):

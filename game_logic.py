@@ -1,8 +1,11 @@
-
+import uuid
 
 class WhistGameFourPlayers:
     def __init__(self):
         super().__init__()
+
+        # Unique identifier
+        self.game_id = str(uuid.uuid4())
 
         # Set up players
         self.players = [("Player 1", 0, 0), ("Player 2", 0, 0), ("Player 3", 0, 0), ("Player 4", 0, 0)]
@@ -11,6 +14,9 @@ class WhistGameFourPlayers:
         self.dealer_index = 0
         self.caller_index = 1
         self.hands_played = 0
+
+        # History
+        self.history = [[] for _ in range(12)]
 
         #Scorecard
         self.scorecard = {
@@ -130,6 +136,32 @@ class WhistGameFourPlayers:
 
     def is_special_game(self, call):
         return call in self.special_games
+    
+    
+    def get_game_id(self):
+        return self.game_id
+    
+    
+    def set_game_id(self, id):
+        self.game_id = id
+
+    
+    def update_points_history(self):
+        current_points = [points for _, points, _ in self.players]
+        if self.hands_played <= 12:
+            self.history[self.hands_played - 1] = current_points
+    
+
+    def get_history(self):
+        return self.history
+    
+    
+    def set_history(self, history):
+        self.history = history
+
+    
+    def clear_history(self):
+        self.history = [[] for _ in range(12)]
     
     
     def calculate_special_game_score(self, game, tricks_won):
