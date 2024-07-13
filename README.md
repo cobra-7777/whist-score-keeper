@@ -16,6 +16,8 @@ Whist Score Keeper is a program created in Python, to help you keep track of the
 - After a player wins, a "Star" is awarded, allowing you to keep playing while tracking how many wins each player has.
 - Keeps track of the "Stars" of each player.
 - Dynamic saving/loading functionality allows you to take a break from a game whenever you want, and load it right back up whenever youre ready to resume.
+- See the history of each game in nicely formatted table
+- Shuffle player order around to switch up who starts as dealer/caller (Can only be done at the start of a game.)
 
 
 
