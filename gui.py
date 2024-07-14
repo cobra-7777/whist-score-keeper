@@ -13,7 +13,7 @@ from gui_utils.game_history_dialog import GameHistoryDialog
 from game_logic import WhistGameFourPlayers
 game = WhistGameFourPlayers()
 
-# bug reprocude, start, play one game, close, load, play one more, and first name is duped.
+# combination of two ideas, 12 star, you get new icon, get 12 of new icon, it upgrades. etc.
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -205,10 +205,10 @@ class WhistScoreKeeper(QMainWindow):
         # Create and position player frames
         self.player_frames = {}
         player_label_positions = [
-            ((self.width - 500) // 2, 180),
-            ((self.width - 500) // 2, 330),
-            ((self.width - 500) // 2, 480),
-            ((self.width - 500) // 2, 630)
+            ((self.width - 600) // 2, 160),
+            ((self.width - 600) // 2, 310),
+            ((self.width - 600) // 2, 460),
+            ((self.width - 600) // 2, 610)
         ]
 
         for i, (player, points, stars) in enumerate(game.get_players()):
@@ -514,7 +514,7 @@ class WhistScoreKeeper(QMainWindow):
 
     def setup_star_labels(self):
         star_pixmap = QPixmap(resource_path('resources/star.png')).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        y_positions = [168, 318, 468, 618]
+        y_positions = [148, 298, 448, 598]
         
         for i, player in enumerate(game.get_players()):
             player_name, _, stars = player
@@ -522,11 +522,11 @@ class WhistScoreKeeper(QMainWindow):
             star_label = QLabel(self)
             star_label.setPixmap(star_pixmap)
             star_label.setFixedSize(40, 40)
-            star_label.move(360, y_positions[i])
+            star_label.move(310, y_positions[i])
             star_label.show()
 
             text_label = QLabel(f'{stars}', self)
-            text_label.move(410, y_positions[i] + 8)
+            text_label.move(358, y_positions[i] + 8)
             text_label.resize(50, 22)
             text_label.setStyleSheet('color: white;')
             text_label.setFont(QFont('Impact', 20))

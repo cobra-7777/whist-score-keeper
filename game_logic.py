@@ -8,7 +8,10 @@ class WhistGameFourPlayers:
         self.game_id = str(uuid.uuid4())
 
         # Set up players
-        self.players = [("Player 1", 0, 0), ("Player 2", 0, 0), ("Player 3", 0, 0), ("Player 4", 0, 0)]
+        self.players = [("Player 1", 0, 0), 
+                        ("Player 2", 0, 0), 
+                        ("Player 3", 0, 0), 
+                        ("Player 4", 0, 0)]
         
         # Dealer/Caller and Amount of Hands Played
         self.dealer_index = 0

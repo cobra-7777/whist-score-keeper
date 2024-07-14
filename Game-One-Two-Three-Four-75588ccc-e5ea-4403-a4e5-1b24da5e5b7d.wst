@@ -1,0 +1,14 @@
+One,402,0
+Two,-134,2
+Three,-134,2
+Four,-134,2
+hands_played,6
+dealer_index,2
+caller_index,3
+game_id,75588ccc-e5ea-4403-a4e5-1b24da5e5b7d
+history_1,One=-12,Two=4,Three=4,Four=4
+history_2,One=-24,Two=8,Three=8,Four=8
+history_3,One=144,Two=-48,Three=-48,Four=-48
+history_4,One=288,Two=-96,Three=-96,Four=-96
+history_5,One=414,Two=-138,Three=-138,Four=-138
+history_6,One=402,Two=-134,Three=-134,Four=-134

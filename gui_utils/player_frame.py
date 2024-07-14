@@ -9,9 +9,10 @@ class PlayerFrame(QFrame):
         self.points = points
         self.stars = stars
         self.role = role
-        self.setFixedSize(500, 110)  # Increased height to provide space for the text at the top
+        self.setFixedSize(600, 110)  # Increased height to provide space for the text at the top
         self.player_font = QFont('Impact', 26)
         self.role_font = QFont('Impact', 24)
+        self.points_font = QFont('Impact', 26)
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -43,11 +44,36 @@ class PlayerFrame(QFrame):
             text_rect = QRect(rect.left() + (rect.width() - 100) // 2, rect.top() - 50, 100, 64)
             painter.drawText(text_rect, Qt.AlignCenter, self.role)
 
-        # Draw the player name and points inside the rectangle, moved up slightly to center vertically
+        # Draw the player name inside the rectangle, moved up slightly to center vertically
         painter.setFont(self.player_font)
         painter.setPen(QColor('white'))
         painter.drawText(QRect(rect.left() + 10, rect.top() + 12, 220, 50), Qt.AlignLeft, self.player_name)
-        painter.drawText(QRect(rect.right() - 230, rect.top() + 12, 220, 50), Qt.AlignRight, f'Points: {self.points}')
+
+        # Set the color for the points
+        if self.points < 0:
+            points_color = QColor('red')
+        elif self.points > 0:
+            points_color = QColor('#00FF00')
+        else:
+            points_color = QColor('white')
+
+        # Draw the "Points: " text in white
+        points_text = "Points: "
+        points_value = str(self.points)
+
+        # Get the width of the "Points: " text
+        painter.setFont(self.points_font)
+        painter.setPen(QColor('white'))
+        points_text_width = painter.fontMetrics().width(points_text)
+
+        # Draw the "Points: " text
+        points_text_rect = QRect(rect.right() - 175, rect.top() + 12, points_text_width, 50)
+        painter.drawText(points_text_rect, Qt.AlignRight, points_text)
+
+        # Draw the points value with the respective color
+        painter.setPen(points_color)
+        points_value_rect = QRect(points_text_rect.right() + 5, rect.top() + 12, 70, 50)
+        painter.drawText(points_value_rect, Qt.AlignLeft, points_value)
 
     def get_stars(self):
         return self.stars
