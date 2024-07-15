@@ -281,14 +281,26 @@ class WhistGameFourPlayers:
             name, points, stars, bronze, silver, gold = player
             if stars >= 12:
                 stars = 0
-                bronze += 1
                 award_crown = True
-                if bronze >= 12:
-                    bronze = 0
+
+                # Increment crown based on current crown level
+                if gold > 0:
+                    gold += 1
+                    if gold >= 12:
+                        gold = 12 # PLayer is supreme winner
+                elif silver > 0:
                     silver += 1
                     if silver >= 12:
                         silver = 0
                         gold += 1
+                elif bronze > 0:
+                    bronze += 1
+                    if bronze >= 12:
+                        bronze = 0
+                        silver += 1
+                else:
+                    bronze += 1
+
                 self.players[i] = (name, points, stars, bronze, silver, gold)
 
         # Reset stars for all players if any player was awarded a crown

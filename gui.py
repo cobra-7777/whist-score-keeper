@@ -2,6 +2,7 @@ import sys
 import os
 import random
 import glob
+import ctypes
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QComboBox, QSizePolicy, QSpacerItem, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox, QLineEdit
 from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
@@ -251,6 +252,19 @@ class WhistScoreKeeper(QMainWindow):
         self.revert_button.setFixedSize(320,55)
         self.revert_button.move((self.width - 320) // 2 , 870)
         self.revert_button.show()
+
+        # Main Menu button
+        self.menu_button = QPushButton("<- Main Menu", self)
+        self.menu_button.clicked.connect(self.back_to_main_menu)
+        self.menu_button.setStyleSheet("""
+            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
+            QPushButton:hover { background-color: #E2B258; border: none; }
+            QPushButton:pressed { background-color: #DD9637; border: none; }
+        """)
+        self.menu_button.setFont(self.backbtn_font)
+        self.menu_button.setFixedSize(150,40)
+        self.menu_button.move(20, 20)
+        self.menu_button.show()
 
         # Shuffle players button
         self.shuffle_players_button = QPushButton("Shuffle Player Order", self)
@@ -812,4 +826,11 @@ def main():
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
+
+    # Set DPI awareness to be DPI unaware (100% scaling)
+    try:
+        ctypes.windll.user32.SetProcessDPIAware()
+    except Exception as e:
+        print(f"Failed to set DPI awareness: {e}")
+
     main()
