@@ -86,7 +86,7 @@ class HandDialog(QDialog):
             layout.addLayout(h_layout)
 
         self.caller_combo = QComboBox()
-        for player, _, _ in self.players:
+        for player, _, _, _, _, _ in self.players:
             self.caller_combo.addItem(player)
         self.caller_combo.setStyleSheet('background-color: white; color: black;')
         self.caller_combo.currentIndexChanged.connect(self.update_partner_combo)
@@ -100,7 +100,7 @@ class HandDialog(QDialog):
         add_label_and_combo("What was played?:", self.call_combo)
 
         self.partner_combo = QComboBox()
-        for player, _, _ in self.players:
+        for player, _, _, _, _, _ in self.players:
             self.partner_combo.addItem(player)
         self.partner_combo.setStyleSheet('background-color: white; color: black;')
         add_label_and_combo("Who was partner?:", self.partner_combo)

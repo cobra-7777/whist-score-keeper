@@ -15,7 +15,7 @@ class GameHistoryDialog(QDialog):
         self.table = QTableWidget()
         self.table.setRowCount(12)  # 12 games
         self.table.setColumnCount(len(players))  # Number of players
-        self.table.setHorizontalHeaderLabels([player for player, _, _ in players])
+        self.table.setHorizontalHeaderLabels([player for player, _, _, _, _, _ in players])
         self.table.setVerticalHeaderLabels([f'Game {i+1}' for i in range(12)])
 
         # Set table styles

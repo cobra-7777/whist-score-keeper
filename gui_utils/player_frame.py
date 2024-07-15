@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QFrame
-from PyQt5.QtGui import QPainter, QPen, QColor, QFont
+from PyQt5.QtGui import QPainter, QPen, QColor, QFont, QPixmap
 from PyQt5.QtCore import Qt, QRect
 
 class PlayerFrame(QFrame):

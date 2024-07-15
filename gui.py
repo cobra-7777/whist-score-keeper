@@ -2,7 +2,8 @@ import sys
 import os
 import random
 import glob
-from PyQt5.QtWidgets import QDialog, QComboBox, QSizePolicy, QSpacerItem, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox, QLineEdit
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QComboBox, QSizePolicy, QSpacerItem, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox, QLineEdit
 from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath, QFontMetrics
 from pywinstyles import apply_style
@@ -211,7 +212,7 @@ class WhistScoreKeeper(QMainWindow):
             ((self.width - 600) // 2, 610)
         ]
 
-        for i, (player, points, stars) in enumerate(game.get_players()):
+        for i, (player, points, stars, _, _, _) in enumerate(game.get_players()):
             role = None
             if i == game.get_dealer_index():
                 role = 'DEALER'
@@ -235,8 +236,21 @@ class WhistScoreKeeper(QMainWindow):
         """)
         self.complete_hand_button.setFont(self.new_game_button_font)
         self.complete_hand_button.setFixedSize(400,80)
-        self.complete_hand_button.move((self.width - 400) // 2 , 790)
+        self.complete_hand_button.move((self.width - 400) // 2 , 765)
         self.complete_hand_button.show()
+
+        # Revert button
+        self.revert_button = QPushButton("Revert Last Hand", self)
+        self.revert_button.clicked.connect(self.revert_last_game)
+        self.revert_button.setStyleSheet("""
+            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
+            QPushButton:hover { background-color: #E2B258; border: none; }
+            QPushButton:pressed { background-color: #DD9637; border: none; }
+        """)
+        self.revert_button.setFont(self.new_game_button_font)
+        self.revert_button.setFixedSize(320,55)
+        self.revert_button.move((self.width - 320) // 2 , 870)
+        self.revert_button.show()
 
         # Shuffle players button
         self.shuffle_players_button = QPushButton("Shuffle Player Order", self)
@@ -265,8 +279,10 @@ class WhistScoreKeeper(QMainWindow):
         self.history_button.show()
         
         self.star_labels = {}
+        self.crown_labels = {}
 
         self.setup_star_labels()
+        self.setup_crown_labels()
 
 
     ##########################################################
@@ -274,6 +290,10 @@ class WhistScoreKeeper(QMainWindow):
     ##########################################################
 
     def update_standings(self, hand_info):
+
+        # temporarily save current state to be able to revert it
+        game.save_current_state()
+
         # Update the main UI and save the game state
         caller, call, partner, tricks_won = hand_info
 
@@ -292,7 +312,7 @@ class WhistScoreKeeper(QMainWindow):
         game.set_dealer_index((game.get_dealer_index() + 1) % len(game.get_players()))
         game.set_caller_index((game.get_caller_index() + 1) % len(game.get_players()))
         
-        for i, (player, points, stars) in enumerate(game.get_players()):
+        for i, (player, points, stars, _, _, _) in enumerate(game.get_players()):
             player_frame = self.player_frames[player]
             player_frame.points = points
             player_frame.stars = stars
@@ -321,11 +341,14 @@ class WhistScoreKeeper(QMainWindow):
         self.hands_played_label.setText(f'Hands Played: {game.get_hands_played()}')
         
         players = game.get_players()
-        for i, (player, points, stars) in enumerate(players):
-            players[i] = (player, 0, stars)  # Reset points, keep stars
+        print(f"Players before resetting points in end_game: {players}")
+        for i, (player, points, stars, bronze, silver, gold) in enumerate(players):
+            players[i] = (player, 0, stars, bronze, silver, gold)  # Reset points, keep stars
         game.set_players(players)
 
-        for i, (player, points, stars) in enumerate(game.get_players()):
+        print(f"Players after resetting points in end_game: {game.get_players()}")
+
+        for i, (player, points, stars, _, _, _) in enumerate(game.get_players()):
             player_frame = self.player_frames[player]
             player_frame.points = points
             player_frame.stars = stars
@@ -364,6 +387,7 @@ class WhistScoreKeeper(QMainWindow):
         self.clear_ui()
         self.load_four_player_new_game_ui()
 
+
     def show_winner_ui(self, winners):
         self.clear_ui()
         self.display_winner(winners)
@@ -389,10 +413,12 @@ class WhistScoreKeeper(QMainWindow):
             if existing_file != file_name:
                 os.rename(existing_file, file_name)
 
+        print(f"Players at the time of saving: {game.get_players()}")
+
         # Save the game state to the file
         with open(file_name, 'w') as file:
-            for player, points, stars in game.get_players():
-                file.write(f"{player},{points},{stars}\n")
+            for player, points, stars, bronze, silver, gold in game.get_players():
+                file.write(f"{player},{points},{stars},{bronze},{silver},{gold}\n")
             file.write(f"hands_played,{game.get_hands_played()}\n")
             file.write(f"dealer_index,{game.get_dealer_index()}\n")
             file.write(f"caller_index,{game.get_caller_index()}\n")
@@ -441,7 +467,10 @@ class WhistScoreKeeper(QMainWindow):
                 player = parts[0]
                 points = int(parts[1])
                 stars = int(parts[2])
-                loaded_players.append((player, points, stars))
+                bronze = int(parts[3])
+                silver = int(parts[4])
+                gold = int(parts[5])
+                loaded_players.append((player, points, stars, bronze, silver, gold))
 
         # Update the game state
         game.set_players(loaded_players)
@@ -474,7 +503,7 @@ class WhistScoreKeeper(QMainWindow):
                 return
 
             
-            players = [(player1, 0, 0), (player2, 0, 0), (player3, 0, 0), (player4, 0, 0)]
+            players = [(player1, 0, 0, 0, 0, 0), (player2, 0, 0, 0, 0, 0), (player3, 0, 0, 0, 0, 0), (player4, 0, 0, 0, 0, 0)]
             game.set_players(players)
             self.save_game()
             self.clear_ui()
@@ -507,6 +536,13 @@ class WhistScoreKeeper(QMainWindow):
         dialog = GameHistoryDialog(history, game.get_players(), self)
         dialog.exec_()
 
+
+    def revert_last_game(self):
+        if game.revert_last_state():
+            self.update_ui_for_loaded_game()  # Update UI to reflect the reverted state
+            self.save_game()  # Save the reverted state to the file
+        else:
+            QMessageBox.warning(self, "Warning", "No previous state to revert to.")
     
     ##########################################################
     # UI SETUP HELPER FUNCTIONS                              #
@@ -517,7 +553,7 @@ class WhistScoreKeeper(QMainWindow):
         y_positions = [148, 298, 448, 598]
         
         for i, player in enumerate(game.get_players()):
-            player_name, _, stars = player
+            player_name, _, stars, _, _, _ = player
 
             star_label = QLabel(self)
             star_label.setPixmap(star_pixmap)
@@ -537,9 +573,98 @@ class WhistScoreKeeper(QMainWindow):
 
     def update_star_labels(self):
         for player in self.game.get_players():
-            player_name, _, stars = player
+            player_name, _, stars, _, _, _ = player
             if player_name in self.star_labels:
                 self.star_labels[player_name].setText(f'{stars}')
+
+    
+    def setup_crown_labels(self):
+        # Crown pixmaps
+        bronze_crown_pixmap = QPixmap(resource_path('resources/bronze_crown.png')).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        silver_crown_pixmap = QPixmap(resource_path('resources/silver_crown.png')).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        gold_crown_pixmap = QPixmap(resource_path('resources/gold_crown.png')).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        
+        y_positions = [148, 298, 448, 598]
+        
+        for i, player in enumerate(game.get_players()):
+            player_name, _, _, bronze_crowns, silver_crowns, gold_crowns = player
+
+            # Bronze Crowns
+            if bronze_crowns > 0:
+                bronze_crown_label = QLabel(self)
+                bronze_crown_label.setPixmap(bronze_crown_pixmap)
+                bronze_crown_label.setFixedSize(40, 40)
+                bronze_crown_label.move(400, y_positions[i])
+                bronze_crown_label.show()
+
+                bronze_crown_text = QLabel(f'{bronze_crowns}', self)
+                bronze_crown_text.move(448, y_positions[i] + 8)
+                bronze_crown_text.resize(50, 22)
+                bronze_crown_text.setStyleSheet('color: white;')
+                bronze_crown_text.setFont(QFont('Impact', 20))
+                bronze_crown_text.show()
+
+                self.crown_labels[player_name + '_bronze'] = bronze_crown_text
+
+            # Silver Crowns
+            elif silver_crowns > 0:
+                silver_crown_label = QLabel(self)
+                silver_crown_label.setPixmap(silver_crown_pixmap)
+                silver_crown_label.setFixedSize(40, 40)
+                silver_crown_label.move(400, y_positions[i])
+                silver_crown_label.show()
+
+                silver_crown_text = QLabel(f'{silver_crowns}', self)
+                silver_crown_text.move(448, y_positions[i] + 8)
+                silver_crown_text.resize(50, 22)
+                silver_crown_text.setStyleSheet('color: white;')
+                silver_crown_text.setFont(QFont('Impact', 20))
+                silver_crown_text.show()
+
+                self.crown_labels[player_name + '_silver'] = silver_crown_text
+
+            # Gold Crowns
+            elif gold_crowns > 0:
+                gold_crown_label = QLabel(self)
+                gold_crown_label.setPixmap(gold_crown_pixmap)
+                gold_crown_label.setFixedSize(40, 40)
+                gold_crown_label.move(400, y_positions[i])
+                gold_crown_label.show()
+
+                gold_crown_text = QLabel(f'{gold_crowns}', self)
+                gold_crown_text.move(448, y_positions[i] + 8)
+                gold_crown_text.resize(50, 22)
+                gold_crown_text.setStyleSheet('color: white;')
+                gold_crown_text.setFont(QFont('Impact', 20))
+                gold_crown_text.show()
+
+                self.crown_labels[player_name + '_gold'] = gold_crown_text
+
+                # No crowns, create empty label
+            else:
+                empty_label = QLabel(self)
+                empty_label.setFixedSize(70, 42)
+                empty_label.move(400, y_positions[i])
+                empty_label.show()
+
+                self.crown_labels[player_name + '_empty'] = empty_label
+
+    
+    def update_crown_labels(self):
+        for player in game.get_players():
+            player_name, _, _, bronze_crowns, silver_crowns, gold_crowns = player
+
+            # Update Bronze Crowns
+            if bronze_crowns > 0 and player_name + '_bronze' in self.crown_labels:
+                self.crown_labels[player_name + '_bronze'].setText(f'{bronze_crowns}')
+
+            # Update Silver Crowns
+            if silver_crowns > 0 and player_name + '_silver' in self.crown_labels:
+                self.crown_labels[player_name + '_silver'].setText(f'{silver_crowns}')
+
+            # Update Gold Crowns
+            if gold_crowns > 0 and player_name + '_gold' in self.crown_labels:
+                self.crown_labels[player_name + '_gold'].setText(f'{gold_crowns}')
     
 
     def update_ui_for_loaded_game(self):
@@ -547,7 +672,7 @@ class WhistScoreKeeper(QMainWindow):
         self.hands_played_label.setText(f'Hands Played: {game.get_hands_played()}')
 
         # Update player frames
-        for i, (player, points, stars) in enumerate(game.get_players()):
+        for i, (player, points, stars, _, _, _) in enumerate(game.get_players()):
             player_frame = self.player_frames[player]
             player_frame.points = points
             player_frame.stars = stars
@@ -559,15 +684,17 @@ class WhistScoreKeeper(QMainWindow):
             player_frame.update()
 
         # Update star labels
-        for player, points, stars in game.get_players():
+        for player, points, stars, _, _, _ in game.get_players():
             self.star_labels[player].setText(f'{stars}')
+        
+        self.setup_crown_labels()
 
     def update_ui_on_shuffle(self):
         player_label_positions = [
-        ((self.width - 500) // 2, 180),
-        ((self.width - 500) // 2, 330),
-        ((self.width - 500) // 2, 480),
-        ((self.width - 500) // 2, 630)
+        ((self.width - 600) // 2, 160),
+        ((self.width - 600) // 2, 310),
+        ((self.width - 600) // 2, 460),
+        ((self.width - 600) // 2, 610)
         ]
 
         self.hands_played_label.setText(f'Hands Played: {game.get_hands_played()}')
@@ -579,7 +706,7 @@ class WhistScoreKeeper(QMainWindow):
 
         # Recreate the player frames in the new order
         self.player_frames = {}
-        for i, (player, points, stars) in enumerate(game.get_players()):
+        for i, (player, points, stars, _, _, _) in enumerate(game.get_players()):
             role = None
             if i == game.get_dealer_index():
                 role = 'DEALER'
@@ -597,10 +724,19 @@ class WhistScoreKeeper(QMainWindow):
         for star_label in self.star_labels.values():
             star_label.hide()
             star_label.setParent(None)
+            star_label.deleteLater()
         
         self.star_labels.clear()
 
+        for crown_key, crown_label in list(self.crown_labels.items()):
+            if '_empty' not in crown_key:
+                crown_label.hide()
+                crown_label.setParent(None)
+                crown_label.deleteLater()
+                del self.crown_labels[crown_key]
+
         self.setup_star_labels()
+        self.setup_crown_labels()
 
         # Ensure the complete hand button is visible
         self.complete_hand_button.show()

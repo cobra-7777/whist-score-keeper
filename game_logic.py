@@ -8,10 +8,10 @@ class WhistGameFourPlayers:
         self.game_id = str(uuid.uuid4())
 
         # Set up players
-        self.players = [("Player 1", 0, 0), 
-                        ("Player 2", 0, 0), 
-                        ("Player 3", 0, 0), 
-                        ("Player 4", 0, 0)]
+        self.players = [("Player 1", 0, 0, 0, 0, 0), # Name, Points, Stars, Bronze Crowns, Silver Crowns, Gold Crowns
+                        ("Player 2", 0, 0, 0, 0, 0), 
+                        ("Player 3", 0, 0, 0, 0, 0), 
+                        ("Player 4", 0, 0, 0, 0, 0)]
         
         # Dealer/Caller and Amount of Hands Played
         self.dealer_index = 0
@@ -20,6 +20,9 @@ class WhistGameFourPlayers:
 
         # History
         self.history = [[] for _ in range(12)]
+
+        # Turn History for reverting
+        self.revert_history = []
 
         #Scorecard
         self.scorecard = {
@@ -150,7 +153,7 @@ class WhistGameFourPlayers:
 
     
     def update_points_history(self):
-        current_points = [points for _, points, _ in self.players]
+        current_points = [points for _, points, _, _, _, _ in self.players]
         if self.hands_played <= 12:
             self.history[self.hands_played - 1] = current_points
     
@@ -165,6 +168,29 @@ class WhistGameFourPlayers:
     
     def clear_history(self):
         self.history = [[] for _ in range(12)]
+
+    
+    def save_current_state(self):
+        state = {
+            'players': [player[:] for player in self.players],
+            'hands_played': self.hands_played,
+            'dealer_index': self.dealer_index,
+            'caller_index': self.caller_index,
+            'history': [history[:] for history in self.history]
+        }
+        self.revert_history.append(state)
+
+    
+    def revert_last_state(self):
+        if self.revert_history:
+            last_state = self.revert_history.pop()
+            self.players = last_state['players']
+            self.hands_played = last_state['hands_played']
+            self.dealer_index = last_state['dealer_index']
+            self.caller_index = last_state['caller_index']
+            self.history = last_state['history']
+            return True
+        return False
     
     
     def calculate_special_game_score(self, game, tricks_won):
@@ -178,7 +204,7 @@ class WhistGameFourPlayers:
         
     
     def distribute_points(self, caller, partner, points, call):
-
+        
         caller_index = next(i for i, p in enumerate(self.players) if p[0] == caller)
         partner_index = next(i for i, p in enumerate(self.players) if p[0] == partner)
 
@@ -186,25 +212,34 @@ class WhistGameFourPlayers:
             # Solo game
             self.players[caller_index] = (self.players[caller_index][0], 
                                           self.players[caller_index][1] + points * 3,
-                                          self.players[caller_index][2]
+                                          self.players[caller_index][2],
+                                          self.players[caller_index][3],
+                                          self.players[caller_index][4],
+                                          self.players[caller_index][5]
                                           )
-            for i, (player, score, stars) in enumerate(self.players):
+            for i, (player, score, stars, bronze, silver, gold) in enumerate(self.players):
                 if player != caller:
-                    self.players[i] = (player, score - points, stars)
+                    self.players[i] = (player, score - points, stars, bronze, silver, gold)
         else:
             # Regular game
             self.players[caller_index] = (self.players[caller_index][0], 
                                           self.players[caller_index][1] + points,
-                                          self.players[caller_index][2]
+                                          self.players[caller_index][2],
+                                          self.players[caller_index][3],
+                                          self.players[caller_index][4],
+                                          self.players[caller_index][5]
                                           )
             self.players[partner_index] = (self.players[partner_index][0], 
                                            self.players[partner_index][1] + points,
-                                           self.players[partner_index][2]
+                                           self.players[partner_index][2],
+                                           self.players[partner_index][3],
+                                           self.players[partner_index][4],
+                                           self.players[partner_index][5]
                                            )
 
-            for i, (player, current_points, stars) in enumerate(self.players):
+            for i, (player, current_points, stars, bronze, silver, gold) in enumerate(self.players):
                 if player != caller and player != partner:
-                    self.players[i] = (player, current_points - points, stars)
+                    self.players[i] = (player, current_points - points, stars, bronze, silver, gold)
 
     
     def distribute_special_game_points(self, caller, player_points, opponent_points):
@@ -213,17 +248,48 @@ class WhistGameFourPlayers:
                                 self.players[caller_index][1] + player_points,
                                 self.players[caller_index][2]
                                 )
-        for i, (player, score, stars) in enumerate(self.players):
+        for i, (player, score, stars, bronze, silver, gold) in enumerate(self.players):
             if player != caller:
-                self.players[i] = (player, score + opponent_points, stars)
+                self.players[i] = (player, score + opponent_points, stars, bronze, silver, gold)
 
     
     def get_winner(self):
         highest_score = max(self.players, key=lambda player: player[1])[1]
         winners = [player for player in self.players if player[1] == highest_score]
-        
+
+        print(f"Players before incrementing stars: {self.players}")
+
         for i, player in enumerate(self.players):
             if player[1] == highest_score:
-                self.players[i] = (player[0], 0, player[2] + 1)  # Reset score, increment stars
+                self.players[i] = (player[0], 0, player[2] + 1, player[3], player[4], player[5])  # Reset score, increment stars
+
+        print(f"Players after incrementing stars: {self.players}")
+
+        self.check_and_award_crowns()
 
         return winners
+    
+
+    def check_and_award_crowns(self):
+        award_crown = False
+
+        # Check if any player should be awarded crowns
+        for i, player in enumerate(self.players):
+            name, points, stars, bronze, silver, gold = player
+            if stars >= 12:
+                stars = 0
+                bronze += 1
+                award_crown = True
+                if bronze >= 12:
+                    bronze = 0
+                    silver += 1
+                    if silver >= 12:
+                        silver = 0
+                        gold += 1
+                self.players[i] = (name, points, stars, bronze, silver, gold)
+
+        # Reset stars for all players if any player was awarded a crown
+        if award_crown:
+            for i, player in enumerate(self.players):
+                name, points, stars, bronze, silver, gold = player
+                self.players[i] = (name, points, 0, bronze, silver, gold)
