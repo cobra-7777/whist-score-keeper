@@ -246,7 +246,10 @@ class WhistGameFourPlayers:
         caller_index = next(i for i, p in enumerate(self.players) if p[0] == caller)
         self.players[caller_index] = (self.players[caller_index][0], 
                                 self.players[caller_index][1] + player_points,
-                                self.players[caller_index][2]
+                                self.players[caller_index][2],
+                                self.players[caller_index][3],
+                                self.players[caller_index][4],
+                                self.players[caller_index][5]
                                 )
         for i, (player, score, stars, bronze, silver, gold) in enumerate(self.players):
             if player != caller:

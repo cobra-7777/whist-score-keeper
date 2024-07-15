@@ -1,0 +1,13 @@
+John,5,4,0,0,1
+Ashley,19,5,5,0,0
+Jennifer,-27,9,0,4,0
+Arthur,3,2,2,0,0
+hands_played,5
+dealer_index,1
+caller_index,2
+game_id,293f723e-44dc-4d84-951a-9eee63f44791
+history_1,John=5,Ashley=-5,Jennifer=5,Arthur=-5
+history_2,John=21,Ashley=-21,Jennifer=-11,Arthur=11
+history_3,John=17,Ashley=-17,Jennifer=-15,Arthur=15
+history_4,John=11,Ashley=1,Jennifer=-21,Arthur=9
+history_5,John=5,Ashley=19,Jennifer=-27,Arthur=3
