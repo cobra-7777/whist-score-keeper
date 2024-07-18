@@ -111,6 +111,12 @@ class HandDialog(QDialog):
         self.tricks_input.setStyleSheet('background-color: white; color: black;')
         add_label_and_combo("Number of tricks won?:", self.tricks_input)
 
+        self.joiner_input = QComboBox()
+        self.joiner_input.addItem('No Joiners')
+        for player, _, _, _, _, _ in self.players:
+            self.joiner_input.addItem(player)
+        self.joiner_input.setStyleSheet('background-color: white; color: black;')
+
         spacer = QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Fixed)
         layout.addItem(spacer)
 
@@ -135,21 +141,26 @@ class HandDialog(QDialog):
     def update_partner_combo(self):
         selected_call = self.call_combo.currentText()
         solo_calls = ['7 Quarters', 
-                      '8 Quarters', 
-                      'Normal Sun', 
+                      '8 Quarters',  
                       '9 Quarters', 
-                      'Clean Sun', 
                       '10 Quarters',
-                      'Table Show',
                       '11 Quarters',
-                      'Super Table Show',
                       '12 Quarters',
                       '13 Quarters'
-                      ]
+                    ]
+        
+        joinable_calls = ['Normal Sun',
+                          'Clean Sun',
+                          'Table Show',
+                          'Super Table Show'
+                        ]
         
         if selected_call in solo_calls:
             self.partner_combo.setCurrentIndex(self.caller_combo.currentIndex())
             self.partner_combo.setEnabled(False)
+        elif selected_call in joinable_calls:
+            self.partner_combo.hide()
+            
         else:
             self.partner_combo.setEnabled(True)
 
