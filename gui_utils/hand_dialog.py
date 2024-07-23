@@ -63,6 +63,8 @@ class HandDialog(QDialog):
                                 '13'
                                 ]
 
+        self.labels = {}
+        self.combos = {}
 
         self.init_ui()
 
@@ -74,7 +76,7 @@ class HandDialog(QDialog):
 
         layout = QVBoxLayout()
 
-        def add_label_and_combo(label_text, combo_box):
+        def add_label_and_combo(label_tag, label_text, combo_box):
             h_layout = QHBoxLayout()
             label = QLabel(label_text)
             label.setFont(QFont('Impact', 26))
@@ -84,38 +86,43 @@ class HandDialog(QDialog):
             h_layout.addWidget(label)
             h_layout.addWidget(combo_box)
             layout.addLayout(h_layout)
+            self.labels[label_tag] = label
+            self.combos[label_tag] = combo_box
 
         self.caller_combo = QComboBox()
         for player, _, _, _, _, _ in self.players:
             self.caller_combo.addItem(player)
         self.caller_combo.setStyleSheet('background-color: white; color: black;')
         self.caller_combo.currentIndexChanged.connect(self.update_partner_combo)
-        add_label_and_combo("Who got the calling?:", self.caller_combo)
+        add_label_and_combo("caller", "Who got the calling?:", self.caller_combo)
 
         self.call_combo = QComboBox()
         for i in self.calls:
             self.call_combo.addItem(i)
         self.call_combo.setStyleSheet('background-color: white; color: black;')
         self.call_combo.currentIndexChanged.connect(self.update_partner_combo)
-        add_label_and_combo("What was played?:", self.call_combo)
+        add_label_and_combo("played", "What was played?:", self.call_combo)
 
         self.partner_combo = QComboBox()
         for player, _, _, _, _, _ in self.players:
             self.partner_combo.addItem(player)
         self.partner_combo.setStyleSheet('background-color: white; color: black;')
-        add_label_and_combo("Who was partner?:", self.partner_combo)
-
-        self.tricks_input = QComboBox()
-        for i in self.possible_tricks:
-            self.tricks_input.addItem(i)
-        self.tricks_input.setStyleSheet('background-color: white; color: black;')
-        add_label_and_combo("Number of tricks won?:", self.tricks_input)
+        add_label_and_combo("partner", "Who was partner?:", self.partner_combo)
 
         self.joiner_input = QComboBox()
         self.joiner_input.addItem('No Joiners')
         for player, _, _, _, _, _ in self.players:
             self.joiner_input.addItem(player)
         self.joiner_input.setStyleSheet('background-color: white; color: black;')
+        add_label_and_combo("joiner", 'Did anyone join the call?:', self.joiner_input)
+        self.labels["joiner"].hide()
+        self.combos["joiner"].hide()
+
+        self.tricks_input = QComboBox()
+        for i in self.possible_tricks:
+            self.tricks_input.addItem(i)
+        self.tricks_input.setStyleSheet('background-color: white; color: black;')
+        add_label_and_combo("tricks", "Number of tricks won?:", self.tricks_input)
 
         spacer = QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Fixed)
         layout.addItem(spacer)
@@ -156,13 +163,23 @@ class HandDialog(QDialog):
                         ]
         
         if selected_call in solo_calls:
-            self.partner_combo.setCurrentIndex(self.caller_combo.currentIndex())
-            self.partner_combo.setEnabled(False)
+            self.combos["partner"].setCurrentIndex(self.caller_combo.currentIndex())
+            self.combos["partner"].setEnabled(False)
+            self.labels["partner"].show()
+            self.combos["partner"].show()
+            self.labels["joiner"].hide()
+            self.combos["joiner"].hide()
         elif selected_call in joinable_calls:
-            self.partner_combo.hide()
-            
+            self.labels["partner"].hide()
+            self.combos["partner"].hide()
+            self.labels["joiner"].show()
+            self.combos["joiner"].show()
         else:
-            self.partner_combo.setEnabled(True)
+            self.combos["partner"].setEnabled(True)
+            self.labels["partner"].show()
+            self.combos["partner"].show()
+            self.labels["joiner"].hide()
+            self.combos["joiner"].hide()
 
     def complete_hand(self):
         caller = self.caller_combo.currentText()
