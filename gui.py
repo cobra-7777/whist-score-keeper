@@ -309,11 +309,14 @@ class WhistScoreKeeper(QMainWindow):
         game.save_current_state()
 
         # Update the main UI and save the game state
-        caller, call, partner, tricks_won = hand_info
+        caller, call, partner, tricks_won, joiner, joiner_tricks_won = hand_info
 
         if game.is_special_game(call):
             player_points, opponent_points = game.calculate_special_game_score(call, tricks_won)
             game.distribute_special_game_points(caller, player_points, opponent_points)
+            if joiner:
+                joiner_points, joiner_opponent_points = game.calculate_special_game_score(call, joiner_tricks_won)
+                game.distribute_special_game_points(joiner, joiner_points, joiner_opponent_points)
         else:
             points = game.calculate_score(call, tricks_won)
             game.distribute_points(caller, partner, points, call)

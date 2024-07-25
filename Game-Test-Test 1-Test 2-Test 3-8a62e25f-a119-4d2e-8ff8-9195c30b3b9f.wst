@@ -1,9 +1,0 @@
-Test,72,0,0,0,0
-Test 1,-24,0,0,0,0
-Test 2,-24,0,0,0,0
-Test 3,-24,0,0,0,0
-hands_played,1
-dealer_index,1
-caller_index,2
-game_id,8a62e25f-a119-4d2e-8ff8-9195c30b3b9f
-history_1,Test=72,Test 1=-24,Test 2=-24,Test 3=-24

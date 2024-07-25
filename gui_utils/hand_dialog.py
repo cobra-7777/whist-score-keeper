@@ -122,7 +122,15 @@ class HandDialog(QDialog):
         for i in self.possible_tricks:
             self.tricks_input.addItem(i)
         self.tricks_input.setStyleSheet('background-color: white; color: black;')
-        add_label_and_combo("tricks", "Number of tricks won?:", self.tricks_input)
+        add_label_and_combo("tricks", "Caller tricks won:", self.tricks_input)
+
+        self.joiner_tricks_input = QComboBox()
+        for i in self.possible_tricks:
+            self.joiner_tricks_input.addItem(i)
+        self.joiner_tricks_input.setStyleSheet('background-color: white; color: black;')
+        add_label_and_combo("joiner_tricks", "Joiner tricks won:", self.joiner_tricks_input)
+        self.labels["joiner_tricks"].hide()
+        self.combos["joiner_tricks"].hide()
 
         spacer = QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Fixed)
         layout.addItem(spacer)
@@ -169,17 +177,34 @@ class HandDialog(QDialog):
             self.combos["partner"].show()
             self.labels["joiner"].hide()
             self.combos["joiner"].hide()
+            self.labels["joiner_tricks"].hide()
+            self.combos["joiner_tricks"].hide()
         elif selected_call in joinable_calls:
             self.labels["partner"].hide()
             self.combos["partner"].hide()
             self.labels["joiner"].show()
             self.combos["joiner"].show()
+            self.labels["joiner_tricks"].show()
+            self.combos["joiner_tricks"].show()
+            self.update_joiner_combo()
         else:
             self.combos["partner"].setEnabled(True)
             self.labels["partner"].show()
             self.combos["partner"].show()
             self.labels["joiner"].hide()
             self.combos["joiner"].hide()
+            self.labels["joiner_tricks"].hide()
+            self.combos["joiner_tricks"].hide()
+
+    
+    def update_joiner_combo(self):
+        caller = self.caller_combo.currentText()
+        self.combos["joiner"].clear()
+        self.combos["joiner"].addItem('No Joiners')
+        for player, _, _, _, _, _ in self.players:
+            if player != caller:
+                self.combos["joiner"].addItem(player)
+
 
     def complete_hand(self):
         caller = self.caller_combo.currentText()
@@ -187,6 +212,18 @@ class HandDialog(QDialog):
         partner = self.partner_combo.currentText()
         tricks_won = int(self.tricks_input.currentText())
 
-        hand_info = (caller, call, partner, tricks_won)
+        joinable_calls = ['Normal Sun', 'Clean Sun', 'Table Show', 'Super Table Show']
+
+        if call in joinable_calls:
+            joiner = self.joiner_input.currentText()
+            joiner_tricks_won = int(self.joiner_tricks_input.currentText())
+            if joiner == 'No Joiners':
+                joiner_tricks_won = None
+                joiner = None
+        else:
+            joiner_tricks_won = None
+            joiner = None
+
+        hand_info = (caller, call, partner, tricks_won, joiner, joiner_tricks_won)
         self.parent().update_standings(hand_info)
         self.accept()
