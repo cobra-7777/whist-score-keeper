@@ -1,7 +1,7 @@
-Player 1,0,0,0,0,0
-Player 2,0,0,0,0,0
-Player 3,0,0,0,0,0
 Player 4,0,0,0,0,0
+Player 3,0,0,0,0,0
+Player 2,0,0,0,0,0
+Player 1,0,0,0,0,0
 hands_played,0
 dealer_index,0
 caller_index,1

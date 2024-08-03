@@ -1,6 +1,13 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHeaderView
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QFont, QIcon
+import sys
+import os
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
 
 class GameHistoryDialog(QDialog):
     def __init__(self, history, players, parent=None):
@@ -8,6 +15,8 @@ class GameHistoryDialog(QDialog):
         self.setWindowTitle("Game History")
         self.setFixedSize(1000, 800)
         self.setStyleSheet('background-color: #111111; color: white;')
+
+        self.x_icon = QIcon(resource_path('../resources/x.png'))
 
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -63,12 +72,25 @@ class GameHistoryDialog(QDialog):
 
         layout.addWidget(self.table)
 
-        self.close_button = QPushButton("Close")
+        self.close_button = QPushButton(" Close")
+        self.close_button.setIcon(self.x_icon)
+        self.close_button.setIconSize(QSize(42,42))
         self.close_button.clicked.connect(self.close)
         self.close_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; color: black; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #EF5350;
+                border: 3px solid #C62828;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #E57373;
+                border-color: #C62828;
+            }
+            QPushButton:pressed {
+                background-color: #EF5350;
+                border-color: #C62828;
+            }
         """)
         self.close_button.setFont(QFont('Impact', 20))
         self.close_button.setFixedSize(200, 50)  # Adjusted button size

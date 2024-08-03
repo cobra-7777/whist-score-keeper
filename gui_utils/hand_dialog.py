@@ -1,6 +1,14 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QSpacerItem, QSizePolicy, QPushButton
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from pywinstyles import apply_style
+from PyQt5.QtCore import QSize
+import sys
+import os
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
 
 class HandDialog(QDialog):
     def __init__(self, players, parent=None):
@@ -73,6 +81,7 @@ class HandDialog(QDialog):
         self.setFixedSize(700, 750)
         self.setStyleSheet('background-color: #111111; color: white;')
         apply_style(self, "dark")
+        self.check_icon = QIcon(resource_path('../resources/check-circle.png'))
 
         layout = QVBoxLayout()
 
@@ -135,13 +144,26 @@ class HandDialog(QDialog):
         spacer = QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Fixed)
         layout.addItem(spacer)
 
-        complete_button = QPushButton("Complete", self)
+        complete_button = QPushButton("  Complete", self)
         complete_button.clicked.connect(self.complete_hand)
+        complete_button.setIcon(self.check_icon)
+        complete_button.setIconSize(QSize(42,42))
         complete_button.setFixedSize(250, 65)
         complete_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; color: black; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #388E3C;
+                border: 3px solid #155936;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #81C784;
+                border-color: #28a745;
+            }
+            QPushButton:pressed {
+                background-color: #218838;
+                border-color: #1e7e34;
+            }
         """)
         complete_button.setFont(QFont('Impact', 27))
         button_layout = QHBoxLayout()

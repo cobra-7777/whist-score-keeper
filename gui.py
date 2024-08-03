@@ -5,7 +5,7 @@ import glob
 import ctypes
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QComboBox, QSizePolicy, QSpacerItem, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox, QLineEdit
-from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
+from PyQt5.QtCore import Qt, QPropertyAnimation, QRect, QSize
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath, QFontMetrics
 from pywinstyles import apply_style
 from gui_utils.hand_dialog import HandDialog
@@ -51,6 +51,15 @@ class WhistScoreKeeper(QMainWindow):
         self.normal_font = QFont('Palatino Linotype', 14)
         self.dealer_label_font = QFont('Palatino Linotype', 10)
 
+        # ICONS
+        self.check_icon = QIcon(resource_path('resources/check-circle.png'))
+        self.back_icon = QIcon(resource_path('resources/arrow-left-circle'))
+        self.load_icon = QIcon(resource_path("resources/saveicon.png"))
+        self.play_icon = QIcon(resource_path("resources/playicon.png"))
+        self.revert_icon = QIcon(resource_path('resources/revert.png'))
+        self.history_icon = QIcon(resource_path('resources/clipboard.png'))
+        self.shuffle_icon = QIcon(resource_path('resources/shuffle.png'))
+
         # Set up the initial layout
         self.load_main_menu()
 
@@ -61,14 +70,26 @@ class WhistScoreKeeper(QMainWindow):
     ##########################################################
 
     def load_main_menu(self):
-
         # START NEW GAME BUTTON
-        self.start_fresh_game_button = QPushButton("START A NEW GAME", self)
+        self.start_fresh_game_button = QPushButton("  START A NEW GAME", self)
         self.start_fresh_game_button.clicked.connect(self.start_fresh_game)
+        self.start_fresh_game_button.setIcon(self.play_icon)
+        self.start_fresh_game_button.setIconSize(QSize(48, 48))
         self.start_fresh_game_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #388E3C;
+                border: 3px solid #155936;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #81C784;
+                border-color: #28a745;
+            }
+            QPushButton:pressed {
+                background-color: #218838;
+                border-color: #1e7e34;
+            }
         """)
         self.start_fresh_game_button.setFixedSize(450,100)
         self.start_fresh_game_button.setFont(self.new_game_button_font)
@@ -76,12 +97,25 @@ class WhistScoreKeeper(QMainWindow):
 
 
         # LOAD EXISTING GAME BUTTON
-        self.load_existing_game_button = QPushButton("LOAD EXISTING GAME", self)
+        self.load_existing_game_button = QPushButton("  LOAD EXISTING GAME", self)
         self.load_existing_game_button.clicked.connect(self.load_existing_game)
+        self.load_existing_game_button.setIcon(self.load_icon)
+        self.load_existing_game_button.setIconSize(QSize(48, 48))
         self.load_existing_game_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #1E88E5;
+                border: 3px solid #1565C0;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #64B5F6;
+                border-color: #1565C0;
+            }
+            QPushButton:pressed {
+                background-color: #1E88E5;
+                border-color: #1565C0;
+            }
         """)
         self.load_existing_game_button.setFixedSize(450,80)
         self.load_existing_game_button.setFont(self.load_game_button_font)
@@ -147,23 +181,50 @@ class WhistScoreKeeper(QMainWindow):
         self.player4_input.setFont(self.new_game_input_font)
 
         # Start game button
-        self.start_game_button = QPushButton("Start New Game", self)
+        self.start_game_button = QPushButton("  Start New Game", self)
         self.start_game_button.clicked.connect(self.start_new_game)
+        self.start_game_button.setIcon(self.play_icon)
+        self.start_game_button.setIconSize(QSize(48,48))
         self.start_game_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #388E3C;
+                border: 3px solid #155936;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #81C784;
+                border-color: #28a745;
+            }
+            QPushButton:pressed {
+                background-color: #218838;
+                border-color: #1e7e34;
+            }
         """)
         self.start_game_button.setFixedSize(500,80)
         self.start_game_button.setFont(self.new_game_button_font)
         self.start_game_button.move((self.width - 500) // 2, 600)
 
-        self.back_button = QPushButton('<- Back', self)
+
+        self.back_button = QPushButton(' Back', self)
         self.back_button.clicked.connect(self.back_to_main_menu)
+        self.back_button.setIcon(self.back_icon)
+        self.back_button.setIconSize(QSize(25,25))
         self.back_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #EF5350;
+                border: 3px solid #C62828;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #E57373;
+                border-color: #C62828;
+            }
+            QPushButton:pressed {
+                background-color: #EF5350;
+                border-color: #C62828;
+            }
         """)
         self.back_button.setFixedSize(100,50)
         self.back_button.setFont(self.backbtn_font)
@@ -228,38 +289,78 @@ class WhistScoreKeeper(QMainWindow):
             self.player_frames[player] = player_frame
 
         # Complete a hand button
-        self.complete_hand_button = QPushButton("Complete a Hand", self)
+        self.complete_hand_button = QPushButton("  Complete a Hand", self)
         self.complete_hand_button.clicked.connect(self.complete_hand)
+        self.complete_hand_button.setIcon(self.check_icon)
+        self.complete_hand_button.setIconSize(QSize(48,48))
         self.complete_hand_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #388E3C;
+                border: 3px solid #155936;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #81C784;
+                border-color: #28a745;
+            }
+            QPushButton:pressed {
+                background-color: #218838;
+                border-color: #1e7e34;
+            }
         """)
         self.complete_hand_button.setFont(self.new_game_button_font)
+        self.complete_hand_button.setContentsMargins(20,20,20,20)
         self.complete_hand_button.setFixedSize(400,80)
         self.complete_hand_button.move((self.width - 400) // 2 , 765)
         self.complete_hand_button.show()
 
         # Revert button
-        self.revert_button = QPushButton("Revert Last Hand", self)
+        self.revert_button = QPushButton("  Revert Last Hand", self)
         self.revert_button.clicked.connect(self.revert_last_game)
+        self.revert_button.setIcon(self.revert_icon)
+        self.revert_button.setIconSize(QSize(42,42))
         self.revert_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #EF5350;
+                border: 3px solid #C62828;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #E57373;
+                border-color: #C62828;
+            }
+            QPushButton:pressed {
+                background-color: #EF5350;
+                border-color: #C62828;
+            }
         """)
         self.revert_button.setFont(self.new_game_button_font)
-        self.revert_button.setFixedSize(320,55)
-        self.revert_button.move((self.width - 320) // 2 , 870)
+        self.revert_button.setFixedSize(350,60)
+        self.revert_button.move((self.width - 350) // 2 , 870)
         self.revert_button.show()
 
         # Main Menu button
-        self.menu_button = QPushButton("<- Main Menu", self)
+        self.menu_button = QPushButton(" Main Menu", self)
         self.menu_button.clicked.connect(self.back_to_main_menu)
+        self.menu_button.setIcon(self.back_icon)
+        self.menu_button.setIconSize(QSize(25,25))
         self.menu_button.setStyleSheet("""
-            QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-            QPushButton:hover { background-color: #E2B258; border: none; }
-            QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #EF5350;
+                border: 3px solid #C62828;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #E57373;
+                border-color: #C62828;
+            }
+            QPushButton:pressed {
+                background-color: #EF5350;
+                border-color: #C62828;
+            }
         """)
         self.menu_button.setFont(self.backbtn_font)
         self.menu_button.setFixedSize(150,40)
@@ -267,12 +368,25 @@ class WhistScoreKeeper(QMainWindow):
         self.menu_button.show()
 
         # Shuffle players button
-        self.shuffle_players_button = QPushButton("Shuffle Player Order", self)
+        self.shuffle_players_button = QPushButton("  Shuffle Seats", self)
         self.shuffle_players_button.clicked.connect(self.shuffle_players)
+        self.shuffle_players_button.setIcon(self.shuffle_icon)
+        self.shuffle_players_button.setIconSize(QSize(42,42))
         self.shuffle_players_button.setStyleSheet("""
-        QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-        QPushButton:hover { background-color: #E2B258; border: none; }
-        QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #1E88E5;
+                border: 3px solid #1565C0;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #64B5F6;
+                border-color: #1565C0;
+            }
+            QPushButton:pressed {
+                background-color: #1E88E5;
+                border-color: #1565C0;
+            }
         """)
         self.shuffle_players_button.setFont(self.new_game_button_font)
         self.shuffle_players_button.setFixedSize(320,60)
@@ -280,12 +394,25 @@ class WhistScoreKeeper(QMainWindow):
         self.shuffle_players_button.show()
 
         # History Button
-        self.history_button = QPushButton('Game History', self)
+        self.history_button = QPushButton(' Game History', self)
         self.history_button.clicked.connect(self.show_history_dialog)
+        self.history_button.setIcon(self.history_icon)
+        self.history_button.setIconSize(QSize(42,42))
         self.history_button.setStyleSheet("""
-        QPushButton { background-color: #DD9637; border: 5px solid #E5C26B; border-radius: 10px; }
-        QPushButton:hover { background-color: #E2B258; border: none; }
-        QPushButton:pressed { background-color: #DD9637; border: none; }
+            QPushButton {
+                background-color: #1E88E5;
+                border: 3px solid #1565C0;
+                border-radius: 10px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #64B5F6;
+                border-color: #1565C0;
+            }
+            QPushButton:pressed {
+                background-color: #1E88E5;
+                border-color: #1565C0;
+            }
         """)
         self.history_button.setFont(self.new_game_button_font)
         self.history_button.setFixedSize(300,60)
