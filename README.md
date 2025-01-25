@@ -1,6 +1,9 @@
 
-
-[![Full-Logo-Transparent-No-Buffer.png](https://i.postimg.cc/VNsRb7K6/Full-Logo-Transparent-No-Buffer.png)](https://postimg.cc/BjyDrC99)
+<p align="center">
+  <a href="https://postimg.cc/BjyDrC99">
+    <img src="https://i.postimg.cc/VNsRb7K6/Full-Logo-Transparent-No-Buffer.png" alt="Full-Logo-Transparent-No-Buffer.png" />
+  </a>
+</p>
 
 
 # Whist Score Keeper

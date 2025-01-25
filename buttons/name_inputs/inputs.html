@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<br lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="inputs_style.css">
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+</head>
+<body style="margin: 0; padding: 0; background-color: #111111;"></body>
+    <div class="inputs-container">
+        <div class="input__container" id="player1">
+            <label class="input__label">Player 1</label>
+            <input placeholder="Enter your name" class="input" name="text" type="text">
+            <p class="input__description">What do you want to call yourself?</p>
+        </div>
+
+        <div class="input__container" id="player2">
+            <label class="input__label">Player 2</label>
+            <input placeholder="Enter your name" class="input" name="text" type="text">
+            <p class="input__description">What do you want to call yourself?</p>
+        </div>
+
+        <div class="input__container" id="player3">
+            <label class="input__label">Player 3</label>
+            <input placeholder="Enter your name" class="input" name="text" type="text">
+            <p class="input__description">What do you want to call yourself?</p>
+        </div>
+
+        <div class="input__container" id="player4">
+            <label class="input__label">Player 4</label>
+            <input placeholder="Enter your name" class="input" name="text" type="text">
+            <p class="input__description">What do you want to call yourself?</p>
+        </div>
+    </div>
+
+    <script>
+        new QWebChannel(qt.webChannelTransport, function(channel) {
+            window.pywebchannel = channel.objects.pywebchannel;
+        });
+    
+        // Function to retrieve all player names and pass them to Python
+        function submitNames() {
+            let player1 = document.getElementById("player1").value;
+            let player2 = document.getElementById("player2").value;
+            let player3 = document.getElementById("player3").value;
+            let player4 = document.getElementById("player4").value;
+    
+            // Send player names to Python via WebChannel
+            pywebchannel.receiveNames([player1, player2, player3, player4]);
+        }
+    </script>
+</body>
+</html>

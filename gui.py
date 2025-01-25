@@ -4,8 +4,8 @@ import random
 import glob
 import ctypes
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QComboBox, QSizePolicy, QSpacerItem, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox, QLineEdit
-from PyQt5.QtCore import Qt, QPropertyAnimation, QRect, QSize
+from PyQt5.QtWidgets import QComboBox, QSizePolicy, QSpacerItem, QHBoxLayout, QFrame, QGraphicsOpacityEffect, QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox, QLineEdit, QDialog
+from PyQt5.QtCore import Qt, QPropertyAnimation, QRect, QSize, QUrl, QObject, pyqtSlot, QTimer
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath, QFontMetrics
 from pywinstyles import apply_style
 from gui_utils.hand_dialog import HandDialog
@@ -13,6 +13,8 @@ from gui_utils.player_frame import PlayerFrame
 from gui_utils.custom_info_box import InfoMessageBox
 from gui_utils.game_history_dialog import GameHistoryDialog
 from game_logic import WhistGameFourPlayers
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWebChannel import QWebChannel
 game = WhistGameFourPlayers()
 
 # combination of two ideas, 12 star, you get new icon, get 12 of new icon, it upgrades. etc.
@@ -21,6 +23,43 @@ def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
+
+class Bridge(QObject):
+    def __init__(self, window):
+        super().__init__()
+        self.window = window  # This is the main window that has the methods we want to call
+
+    @pyqtSlot(str)
+    def buttonClicked(self, button_id, data=None):
+        # Depending on the button clicked, we call different functions
+        if button_id == "start_button":
+            QTimer.singleShot(0, self.window.start_fresh_game) # Call the function for the Start button
+        elif button_id == "choose_folder":
+            self.window.load_existing_game()  # Call the function for choosing a folder
+        elif button_id == "video_mode":
+            self.window.scanmode = "video"  # Call the video mode processing
+        elif button_id == "photo_mode":
+            self.window.scanmode = "photo"  # Call the photo mode processing
+        elif button_id == 'okay_button':
+            if isinstance(self.window, QDialog):
+                self.window.accept()
+            else:
+                print('Not a dialog window.')
+        elif button_id == 'delete_button':
+            if isinstance(self.window, QDialog):
+                self.window.accept()
+            else:
+                print("Not a dialog window.")
+        elif button_id == 'review_button':
+            self.window.show_deletion_dialog()
+        else:
+            print(f"Unknown button: {button_id}")
+
+    @pyqtSlot(list)
+    def receiveNames(self, names):
+        player1, player2, player3, player4 = names
+        print(f"Player 1: {player1}, Player 2: {player2}, Player 3: {player3}, Player 4: {player4}")
+        # Process player names here
 
 
 class WhistScoreKeeper(QMainWindow):
@@ -70,56 +109,29 @@ class WhistScoreKeeper(QMainWindow):
     ##########################################################
 
     def load_main_menu(self):
+        # Webchannel Bridge
+        self.bridge = Bridge(self)
+
         # START NEW GAME BUTTON
-        self.start_fresh_game_button = QPushButton("  START A NEW GAME", self)
-        self.start_fresh_game_button.clicked.connect(self.start_fresh_game)
-        self.start_fresh_game_button.setIcon(self.play_icon)
-        self.start_fresh_game_button.setIconSize(QSize(48, 48))
-        self.start_fresh_game_button.setStyleSheet("""
-            QPushButton {
-                background-color: #388E3C;
-                border: 3px solid #155936;
-                border-radius: 10px;
-                color: black;
-            }
-            QPushButton:hover {
-                background-color: #81C784;
-                border-color: #28a745;
-            }
-            QPushButton:pressed {
-                background-color: #218838;
-                border-color: #1e7e34;
-            }
-        """)
-        self.start_fresh_game_button.setFixedSize(450,100)
-        self.start_fresh_game_button.setFont(self.new_game_button_font)
-        self.start_fresh_game_button.move((self.width - 450) // 2 , 575)
+        self.start_fresh_game_button = QWebEngineView(self)
+        self.start_fresh_game_button.setFixedSize(450,120)
+        self.start_fresh_game_button.setUrl(QUrl.fromLocalFile(resource_path('buttons/start_button/button.html')))
+        self.start_fresh_game_button.move((self.width - 450) // 2, 550)
+
+        self.start_channel = QWebChannel(self.start_fresh_game_button.page())
+        self.start_channel.registerObject('pywebchannel', self.bridge)
+        self.start_fresh_game_button.page().setWebChannel(self.start_channel)
 
 
         # LOAD EXISTING GAME BUTTON
-        self.load_existing_game_button = QPushButton("  LOAD EXISTING GAME", self)
-        self.load_existing_game_button.clicked.connect(self.load_existing_game)
-        self.load_existing_game_button.setIcon(self.load_icon)
-        self.load_existing_game_button.setIconSize(QSize(48, 48))
-        self.load_existing_game_button.setStyleSheet("""
-            QPushButton {
-                background-color: #1E88E5;
-                border: 3px solid #1565C0;
-                border-radius: 10px;
-                color: black;
-            }
-            QPushButton:hover {
-                background-color: #64B5F6;
-                border-color: #1565C0;
-            }
-            QPushButton:pressed {
-                background-color: #1E88E5;
-                border-color: #1565C0;
-            }
-        """)
-        self.load_existing_game_button.setFixedSize(450,80)
-        self.load_existing_game_button.setFont(self.load_game_button_font)
-        self.load_existing_game_button.move((self.width - 450) // 2, 710)
+        self.load_existing_game_button = QWebEngineView(self)
+        self.load_existing_game_button.setFixedSize(300,205)
+        self.load_existing_game_button.setUrl(QUrl.fromLocalFile(resource_path('buttons/load_button/button.html')))
+        self.load_existing_game_button.move((self.width - 300) // 2, 680)
+
+        self.load_channel = QWebChannel(self.load_existing_game_button.page())
+        self.load_channel.registerObject('pywebchannel', self.bridge)
+        self.load_existing_game_button.page().setWebChannel(self.load_channel)
 
 
         # LOGO LABEL
@@ -152,33 +164,14 @@ class WhistScoreKeeper(QMainWindow):
 
     def load_four_player_new_game_ui(self):
         # Player name inputs
-        self.player1_input = QLineEdit(self)
-        self.player1_input.setPlaceholderText("Player 1 Name")
-        self.player1_input.setStyleSheet('background-color: white;')
-        self.player1_input.resize(400,60)
-        self.player1_input.move((self.width - 400) // 2, 180)
-        self.player1_input.setFont(self.new_game_input_font)
+        self.player_inputs = QWebEngineView(self)
+        self.player_inputs.setFixedSize(600,400)
+        self.player_inputs.setUrl(QUrl.fromLocalFile(resource_path('buttons/name_inputs/inputs.html')))
 
-        self.player2_input = QLineEdit(self)
-        self.player2_input.setPlaceholderText("Player 2 Name")
-        self.player2_input.setStyleSheet('background-color: white;')
-        self.player2_input.resize(400,60)
-        self.player2_input.move((self.width - 400) // 2, 280)
-        self.player2_input.setFont(self.new_game_input_font)
-
-        self.player3_input = QLineEdit(self)
-        self.player3_input.setPlaceholderText("Player 3 Name")
-        self.player3_input.setStyleSheet('background-color: white;')
-        self.player3_input.resize(400,60)
-        self.player3_input.move((self.width - 400) // 2, 380)
-        self.player3_input.setFont(self.new_game_input_font)
-
-        self.player4_input = QLineEdit(self)
-        self.player4_input.setPlaceholderText("Player 4 Name")
-        self.player4_input.setStyleSheet('background-color: white;')
-        self.player4_input.resize(400,60)
-        self.player4_input.move((self.width - 400) // 2, 480)
-        self.player4_input.setFont(self.new_game_input_font)
+        self.input_channel = QWebChannel(self.player_inputs.page())
+        self.input_channel.registerObject('pywebchannel', self.bridge)
+        self.player_inputs.page().setWebChannel(self.input_channel)
+        self.player_inputs.move((self.width - 400) // 2, 180)
 
         # Start game button
         self.start_game_button = QPushButton("  Start New Game", self)
@@ -231,10 +224,7 @@ class WhistScoreKeeper(QMainWindow):
         self.back_button.move(20, 20)
         
         
-        self.player1_input.show()
-        self.player2_input.show()
-        self.player3_input.show()
-        self.player4_input.show()
+        self.player_inputs.show()
         self.start_game_button.show()
         self.back_button.show()
     
